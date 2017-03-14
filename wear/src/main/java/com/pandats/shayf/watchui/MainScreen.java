@@ -1,16 +1,14 @@
 package com.pandats.shayf.watchui;
 
 import android.os.Bundle;
+import android.os.Handler;
+import android.os.HandlerThread;
 import android.support.wearable.activity.WearableActivity;
-import android.support.wearable.view.BoxInsetLayout;
-import android.view.View;
-import android.widget.TextView;
 
-import java.text.SimpleDateFormat;
-import java.util.Date;
-import java.util.Locale;
 
 public class MainScreen extends WearableActivity {
+    private Handler mBackgroundHandler;
+    private HandlerThread mBackgroundThread;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -43,5 +41,37 @@ public class MainScreen extends WearableActivity {
         } else {
 
         }
+    }
+
+    ////////////////////////////////////////////////////////////////////////////////////////////////
+    // Thread Handling
+    ////////////////////////////////////////////////////////////////////////////////////////////////
+    protected void startBackgroundThread() {
+        mBackgroundThread = new HandlerThread("Background Thread");
+        mBackgroundThread.start();
+        mBackgroundHandler = new Handler(mBackgroundThread.getLooper());
+    }
+    protected void stopBackgroundThread() {
+        mBackgroundThread.quitSafely();
+        try {
+            mBackgroundThread.join();
+            mBackgroundThread = null;
+            mBackgroundHandler = null;
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
+    }
+    ////////////////////////////////////////////////////////////////////////////////////////////////
+    // Activity Lifecycle
+    ////////////////////////////////////////////////////////////////////////////////////////////////
+    @Override
+    protected void onResume() {
+        super.onResume();
+        startBackgroundThread();
+    }
+    @Override
+    protected void onPause() {
+        stopBackgroundThread();
+        super.onPause();
     }
 }
